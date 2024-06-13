@@ -5,20 +5,27 @@ function App() {
 
   const [startNum, setStartNum] = useState('0')
 
-  const clickerHandler = (value:any) => {
-    if (value === 'AC') {
-      // Clear the calculator screen
-      setStartNum('0')
-    } else if (value === '=') {
-      // Handle calculation if needed
-      // Example: Implement calculation logic here
-    } else {
-      // Append clicked number or decimal point to the current startNum
-      if (startNum === '0') {
-        setStartNum(value.toString())
-      } else {
-        setStartNum(startNum + value.toString())
+  const clickerHandler = (e: any) => {
+    setStartNum((startNum) + e)
+    let value = e.target.value;
+
+    if (value === "AC") {
+      setStartNum("0")
+    } else if (value === "DE") {
+      setStartNum(startNum.slice(0, -1))
+      if (e.length === 0) {
+        setStartNum("0")
       }
+    } else if (value === "+") {
+      setStartNum(startNum + "+")
+    } else if (value === "-") {
+      setStartNum(startNum + "-")
+    } else if (value === "/") {
+      setStartNum(startNum + "/")
+    } else if (value === "*") {
+      setStartNum(startNum + "*")
+    } else if (value === "=") {
+      setStartNum(eval(startNum))
     }
   }
 
@@ -43,6 +50,7 @@ function App() {
         <button onClick={() => clickerHandler('.')} className="calculator__key">.</button>
         <button onClick={() => clickerHandler('AC')} className="calculator__key">AC</button>
         <button onClick={() => clickerHandler('=')} className="calculator__key calculator__key--enter">=</button>
+        <button onClick={() => clickerHandler('DE')} className="calculator__key delete__key--enter">DEL</button>
       </div>
     </div>
   )
