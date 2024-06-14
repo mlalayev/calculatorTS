@@ -1,72 +1,179 @@
-import { useState } from 'react';
+import { styled, Paper, Container, Grid, Button } from '@mui/material';
 import './App.css';
+import { useState } from 'react';
+import { GridOperationButton } from './GridOperationButton';
+import { GridDigitButton } from './GridDigitButton';
+
+
+const OutputContainer = styled('div')(({ theme }) => ({
+  width: "100%",
+  textAlign: "right",
+  height: "2em",
+  padding: theme.spacing(2),
+  fontSize: "3em",
+  overflow: "hidden"
+}))
+
+const CalculatorBase = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(2),
+  margin: theme.spacing(4),
+  borderRadius: 15
+}))
 
 function App() {
-  const [startNum, setStartNum] = useState('');
-  const [isScientific, setIsScientific] = useState(false);
+  const [currentValue, setCurrentValue] = useState("0");
+  const [operation, setOperation] = useState("");
+  const [prevValue, setPrevValue] = useState("");
+  const [overwrite, setOverwrite] = useState(false);
 
-  const toggleScientific = () => {
-    setIsScientific(!isScientific);
+  const clear = () => {
+    setPrevValue("");
+    setOperation("");
+    setCurrentValue("0");
+    setOverwrite(true);
   };
 
-  const clickerHandler = (e: any) => {
-    let value = e.target.value
-
-    if (value === "AC") {
-      setStartNum("0")
-    } else if (value === "DE") {
-      if (startNum.length === 1) {
-        setStartNum("0")
-      } else {
-        setStartNum(startNum.slice(0, -1))
-      }
-    } else if (value === "=") {
-      setStartNum(eval(startNum).toString())
-    } else {
-      if (startNum === "0") {
-        setStartNum(value)
-      } else {
-        setStartNum(startNum + value)
-      }
+  const percent = () => {
+    if (currentValue !== "0") {
+      setCurrentValue((parseFloat(currentValue) / 100).toString());
+      setOverwrite(true);
     }
-  }
+  };
+
+  const calculate = () => {
+    if (!prevValue || !operation) return currentValue;
+
+    const curr = parseFloat(currentValue);
+    const prev = parseFloat(prevValue);
+
+    let result;
+    switch (operation) {
+      case "/":
+        result = prev / curr;
+        break;
+      case "*":
+        result = prev * curr;
+        break;
+      case "+":
+        result = prev + curr;
+        break;
+      case "-":
+        result = prev - curr;
+        break;
+      default:
+        return currentValue;
+    }
+    return result.toString();
+  };
+
+  const equals = () => {
+    const val = calculate();
+    setCurrentValue(val);
+    setPrevValue("");
+    setOperation("");
+    setOverwrite(true);
+  };
+
+  const del = () => {
+    setCurrentValue(currentValue.length === 1 ? "0" : currentValue.slice(0, -1));
+    setOverwrite(true);
+  };
+
+  const selectOperation = (op: string) => {
+    if (operation && !overwrite) {
+      const val = calculate();
+      setCurrentValue(val);
+      setPrevValue(val);
+    } else {
+      setPrevValue(currentValue);
+    }
+
+    setOperation(op);
+    setOverwrite(true);
+  };
+
+  const setDigit = (digit: string) => {
+    if (overwrite) {
+      setCurrentValue(digit);
+      setOverwrite(false);
+    } else {
+      setCurrentValue(currentValue === "0" ? digit : currentValue + digit);
+    }
+  };  
+
 
   return (
-    <div className="calculator">
-      <div className="calculator__output">{startNum}</div>
-      <div className="calculator__keys">
-        <button onClick={clickerHandler} value="+" className="calculator__key calculator__key--operator">+</button>
-        <button onClick={clickerHandler} value="-" className="calculator__key calculator__key--operator">-</button>
-        <button onClick={clickerHandler} value="*" className="calculator__key calculator__key--operator">&times;</button>
-        <button onClick={clickerHandler} value="/" className="calculator__key calculator__key--operator">÷</button>
-        <button onClick={clickerHandler} value="7" className="calculator__key">7</button>
-        <button onClick={clickerHandler} value="8" className="calculator__key">8</button>
-        <button onClick={clickerHandler} value="9" className="calculator__key">9</button>
-        <button onClick={clickerHandler} value="4" className="calculator__key">4</button>
-        <button onClick={clickerHandler} value="5" className="calculator__key">5</button>
-        <button onClick={clickerHandler} value="6" className="calculator__key">6</button>
-        <button onClick={clickerHandler} value="1" className="calculator__key">1</button>
-        <button onClick={clickerHandler} value="2" className="calculator__key">2</button>
-        <button onClick={clickerHandler} value="3" className="calculator__key">3</button>
-        <button onClick={clickerHandler} value="0" className="calculator__key">0</button>
-        <button onClick={clickerHandler} value="." className="calculator__key">.</button>
-        <button onClick={clickerHandler} value="DE" className="calculator__key">DEL</button>
-        <button onClick={clickerHandler} value="=" className="calculator__key calculator__key--enter">=</button>
-        <button onClick={clickerHandler} value="AC" className="calculator__key delete__key--enter">AC</button>
-        <button onClick={toggleScientific} value="SCAL" className="calculator__key scal__key--enter">SCAL</button>
-      </div>
-      {isScientific && (
-        <div className="scientific__keys">
-          <button onClick={clickerHandler} value="sin(" className="calculator__key calculator__key--scientific">sin</button>
-          <button onClick={clickerHandler} value="cos(" className="calculator__key calculator__key--scientific">cos</button>
-          <button onClick={clickerHandler} value="tan(" className="calculator__key calculator__key--scientific">tan</button>
-          <button onClick={clickerHandler} value="log(" className="calculator__key calculator__key--scientific">log</button>
-          <button onClick={clickerHandler} value="sqrt(" className="calculator__key calculator__key--scientific">√</button>
-          <button onClick={clickerHandler} value="^" className="calculator__key calculator__key--scientific">^</button>
-        </div>
-      )}
-    </div>
-  );
-}
+    <Container maxWidth="sm">
+      <CalculatorBase elevation={3}>
+        <Grid container spacing={1}>
+          <Grid item xs={12}>
+            <OutputContainer>
+              {currentValue}
+            </OutputContainer>
+          </Grid>
+          <Grid item container columnSpacing={1}>
 
+            <GridDigitButton digit={"7"} enterDigit={setDigit} />
+            <GridDigitButton digit={"8"} enterDigit={setDigit} />
+            <GridDigitButton digit={"9"} enterDigit={setDigit} />
+
+            <GridOperationButton operation={"*"}
+              selectOperation={selectOperation}
+              selectedOperation={operation} />
+          </Grid>
+          <Grid item container columnSpacing={1}>
+
+            <GridDigitButton digit={"4"} enterDigit={setDigit} />
+            <GridDigitButton digit={"5"} enterDigit={setDigit} />
+            <GridDigitButton digit={"6"} enterDigit={setDigit} />
+
+            <GridOperationButton operation={"-"}
+              selectOperation={selectOperation}
+              selectedOperation={operation} />
+          </Grid>
+          <Grid item container columnSpacing={1}>
+
+            <GridDigitButton digit={"1"} enterDigit={setDigit} />
+            <GridDigitButton digit={"2"} enterDigit={setDigit} />
+            <GridDigitButton digit={"3"} enterDigit={setDigit} />
+
+            <GridOperationButton operation={"+"}
+              selectOperation={selectOperation}
+              selectedOperation={operation} />
+          </Grid>
+          <Grid item container columnSpacing={1} rowSpacing={1}>
+
+            <GridDigitButton digit={"0"} enterDigit={setDigit} xs={3} />
+
+            <Grid item xs={6}>
+              <Button fullWidth variant="contained" onClick={equals}>
+                =
+              </Button>
+            </Grid>
+
+            <GridOperationButton operation={"/"}
+              selectOperation={selectOperation}
+              selectedOperation={operation} />
+
+            <GridOperationButton operation={"DEL"}
+              selectOperation={del}
+              selectedOperation={operation} />
+
+            <GridOperationButton operation={"AC"}
+              selectOperation={clear}
+              selectedOperation={operation} />
+
+            <GridOperationButton operation={"%"}
+              selectOperation={percent}
+              selectedOperation={operation} />
+
+            <GridOperationButton operation={"."}
+              selectOperation={selectOperation}
+              selectedOperation={operation} />
+          </Grid>
+        </Grid>
+      </CalculatorBase>
+    </Container>
+  )
+}
 export default App;
